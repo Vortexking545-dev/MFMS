@@ -1,0 +1,274 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <limits.h>
+
+#define MAX_SUPPLIERS 100
+#define MAX_ASSETS 100
+#define STR_LEN 50
+#define LINE_LEN 100
+
+typedef struct {
+    int supplierID;
+    char name[STR_LEN];
+    char email[STR_LEN];
+    char telephone[STR_LEN];
+    char town[STR_LEN];
+} Supplier;
+
+typedef struct {
+    int assetID;
+    char name[STR_LEN];
+    char type[STR_LEN];
+    double purchaseValue;
+    char department[STR_LEN];
+    char condition[STR_LEN];
+} Asset;
+
+void readLine(const char prompt[], char buffer[], int size) {
+    while (1) {
+        printf("%s", prompt);
+
+        if (fgets(buffer, size, stdin) == NULL) {
+            printf("\nInput closed.\n");
+            exit(1);
+        }
+
+        if (strchr(buffer, '\n') == NULL) {
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+        }
+
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        if (strlen(buffer) > 0) {
+            return;
+        }
+        printf("Error: This field cannot be empty.\n");
+    }
+}
+
+int readPositiveInt(const char prompt[]) {
+    char line[LINE_LEN];
+    char *end;
+    long value;
+
+    while (1) {
+        readLine(prompt, line, LINE_LEN);
+        value = strtol(line, &end, 10);
+
+        if (*end == '\0' && value > 0 && value <= INT_MAX) {
+            return (int)value;
+        }
+        printf("Error: Enter a positive whole number.\n");
+    }
+}
+
+double readNonNegativeDouble(const char prompt[]) {
+    char line[LINE_LEN];
+    char *end;
+    double value;
+
+    while (1) {
+        readLine(prompt, line, LINE_LEN);
+        value = strtod(line, &end);
+
+        if (*end == '\0' && value >= 0) {
+            return value;
+        }
+        printf("Error: Enter a number that is 0 or more.\n");
+    }
+}
+
+static int supplierIdExists(const Supplier suppliers[], int count, int id) {
+    for (int i = 0; i < count; i++) {
+        if (suppliers[i].supplierID == id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int isValidPhone(const char phone[]) {
+    if (strlen(phone) < 7) {
+        return 0;
+    }
+    for (int i = 0; phone[i] != '\0'; i++) {
+        if (!isdigit((unsigned char)phone[i]) && phone[i] != '+' &&
+            phone[i] != ' ' && phone[i] != '-') {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void printSupplier(const Supplier *s) {
+    printf("ID: %d | Name: %s | Email: %s | Tel: %s | Town: %s\n",
+           s->supplierID, s->name, s->email, s->telephone, s->town);
+}
+
+void addSupplier(Supplier suppliers[], int *count) {
+    Supplier s;
+
+    if (*count >= MAX_SUPPLIERS) {
+        printf("Error: Supplier database is full.\n");
+        return;
+    }
+
+    s.supplierID = readPositiveInt("Enter Supplier ID: ");
+    if (supplierIdExists(suppliers, *count, s.supplierID)) {
+        printf("Error: Supplier ID %d already exists.\n", s.supplierID);
+        return;
+    }
+
+    readLine("Enter Supplier Name: ", s.name, STR_LEN);
+
+    while (1) {
+        readLine("Enter Email: ", s.email, STR_LEN);
+        if (strchr(s.email, '@') != NULL && strchr(s.email, '.') != NULL) {
+            break;
+        }
+        printf("Error: Enter a valid email (e.g. name@example.com).\n");
+    }
+
+    while (1) {
+        readLine("Enter Telephone: ", s.telephone, STR_LEN);
+        if (isValidPhone(s.telephone)) {
+            break;
+        }
+        printf("Error: Telephone must be at least 7 digits (numbers, +, - and spaces only).\n");
+    }
+
+    readLine("Enter Town/Location: ", s.town, STR_LEN);
+
+    suppliers[*count] = s;
+    (*count)++;
+    printf("Supplier added successfully!\n");
+}
+
+void displaySuppliers(const Supplier suppliers[], int count) {
+    if (count == 0) {
+        printf("No suppliers registered yet.\n");
+        return;
+    }
+
+    printf("\n--- REGISTERED SUPPLIERS ---\n");
+    for (int i = 0; i < count; i++) {
+        printSupplier(&suppliers[i]);
+    }
+}
+
+void searchSupplier(const Supplier suppliers[], int count, const char searchName[]) {
+    for (int i = 0; i < count; i++) {
+        if (strcmp(suppliers[i].name, searchName) == 0) {
+            printf("\nSupplier Found:\n");
+            printSupplier(&suppliers[i]);
+            return;
+        }
+    }
+    printf("Supplier with name '%s' not found.\n", searchName);
+}
+
+static int assetIdExists(const Asset assets[], int count, int id) {
+    for (int i = 0; i < count; i++) {
+        if (assets[i].assetID == id) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void printAsset(const Asset *a) {
+    printf("ID: %d | Name: %s | Type: %s | Value: N$%.2f | Dept: %s | Condition: %s\n",
+           a->assetID, a->name, a->type, a->purchaseValue, a->department, a->condition);
+}
+
+void addAsset(Asset assets[], int *count) {
+    Asset a;
+
+    if (*count >= MAX_ASSETS) {
+        printf("Error: Asset database is full.\n");
+        return;
+    }
+
+    a.assetID = readPositiveInt("Enter Asset ID: ");
+    if (assetIdExists(assets, *count, a.assetID)) {
+        printf("Error: Asset ID %d already exists.\n", a.assetID);
+        return;
+    }
+
+    readLine("Enter Asset Name: ", a.name, STR_LEN);
+    readLine("Enter Asset Type (e.g. Vehicle, Computer): ", a.type, STR_LEN);
+    a.purchaseValue = readNonNegativeDouble("Enter Purchase Value (N$): ");
+    readLine("Enter Department: ", a.department, STR_LEN);
+    readLine("Enter Condition (e.g. Good, Fair, Poor): ", a.condition, STR_LEN);
+
+    assets[*count] = a;
+    (*count)++;
+    printf("Asset added successfully!\n");
+}
+
+void displayAssets(const Asset assets[], int count) {
+    if (count == 0) {
+        printf("No assets registered yet.\n");
+        return;
+    }
+
+    printf("\n--- REGISTERED ASSETS ---\n");
+    for (int i = 0; i < count; i++) {
+        printAsset(&assets[i]);
+    }
+}
+
+void searchAsset(const Asset assets[], int count, int searchID) {
+    for (int i = 0; i < count; i++) {
+        if (assets[i].assetID == searchID) {
+            printf("\nAsset Found:\n");
+            printAsset(&assets[i]);
+            return;
+        }
+    }
+    printf("Asset with ID %d not found.\n", searchID);
+}
+
+int main(void) {
+    Supplier suppliers[MAX_SUPPLIERS];
+    Asset assets[MAX_ASSETS];
+    int supplierCount = 0;
+    int assetCount = 0;
+    char name[STR_LEN];
+    int choice;
+
+    while (1) {
+        printf("\n1. Add Supplier\n2. Display Suppliers\n3. Search Supplier\n");
+        printf("4. Add Asset\n5. Display Assets\n6. Search Asset\n7. Exit\n");
+        choice = readPositiveInt("Enter your choice: ");
+
+        switch (choice) {
+            case 1:
+                addSupplier(suppliers, &supplierCount);
+                break;
+            case 2:
+                displaySuppliers(suppliers, supplierCount);
+                break;
+            case 3:
+                readLine("Enter supplier name to search: ", name, STR_LEN);
+                searchSupplier(suppliers, supplierCount, name);
+                break;
+            case 4:
+                addAsset(assets, &assetCount);
+                break;
+            case 5:
+                displayAssets(assets, assetCount);
+                break;
+            case 6:
+                searchAsset(assets, assetCount, readPositiveInt("Enter asset ID to search: "));
+                break;
+            case 7:
+                return 0;
+            default:
+                printf("Invalid choice. Pick 1-7.\n");
+        }
+    }
+}

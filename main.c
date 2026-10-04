@@ -1,53 +1,45 @@
 #include <stdio.h>
-#include "employee.h"
+#include "common.h"
+#include "employees.h"
+#include "budget.h"
+#include "suppliers.h"
+#include "assets.h"
+#include "reports.h"
 
-void displayMenu() {
-    printf("\n=========================================\n");
-    printf("   MUNICIPAL FINANCIAL MANAGEMENT SYSTEM\n");
-    printf("=========================================\n");
-    printf("1. Employee Management (Partner A)\n");
-    printf("2. Budget Tracking (Partner A)\n");
-    printf("3. Supplier Management (Partner B)\n");
-    printf("4. Asset Management (Partner B)\n");
-    printf("5. Financial Reports (Partner B)\n");
-    printf("6. Exit\n");
-    printf("-----------------------------------------\n");
-    printf("Enter your choice (1-6): ");
-}
+int main(void) {
+    Employee employees[MAX_ITEMS];
+    int empCount = 0;
 
-int main() {
+    Budget budgets[MAX_ITEMS];
+    int budgetCount = 0;
+
+    Supplier suppliers[MAX_ITEMS];
+    int supplierCount = 0;
+
+    Asset assets[MAX_ITEMS];
+    int assetCount = 0;
+
     int choice;
-
     do {
-        displayMenu();
-        if (scanf("%d", &choice) != 1) {
-            printf("Invalid input. Please enter a number between 1 and 6.\n");
-            // Clear input buffer
-            while (getchar() != '\n');
-            continue;
-        }
+        printf("\n========================================\n");
+        printf(" MUNICIPAL FINANCIAL MANAGEMENT SYSTEM\n");
+        printf("========================================\n");
+        printf("1. Employee Management\n");
+        printf("2. Budget Management\n");
+        printf("3. Supplier Management\n");
+        printf("4. Asset Management\n");
+        printf("5. Reports\n");
+        printf("6. Exit\n");
+        choice = readPositiveInt("Enter your choice: ");
 
-switch (choice) {
-        case 1:
-            employeeMenu();
-            break;
-        case 2:
-            printf("\n[->] Loading Budget Tracking module...\n");
-            break;
-        case 3:
-            printf("\n[->] Loading Supplier Management module...\n");
-            break;
-        case 4:
-            printf("\n[->] Loading Asset Management module...\n");
-            break;
-        case 5:
-            printf("\n[->] Loading Financial Reports module...\n");
-            break;
-        case 6:
-            printf("\nExiting system. Goodbye!\n");
-            break;
-        default:
-            printf("\nInvalid choice! Please select an option from 1 to 6.\n");
+        switch (choice) {
+            case 1: employeeMenu(employees, &empCount); break;
+            case 2: budgetMenu(budgets, &budgetCount); break;
+            case 3: supplierMenu(suppliers, &supplierCount); break;
+            case 4: assetMenu(assets, &assetCount); break;
+            case 5: reportsMenu(employees, empCount, budgets, budgetCount, suppliers, supplierCount, assets, assetCount); break;
+            case 6: printf("Shutting down MFMS. Goodbye.\n"); break;
+            default: printf("[!] Invalid choice. Select 1 to 6.\n");
         }
     } while (choice != 6);
 
